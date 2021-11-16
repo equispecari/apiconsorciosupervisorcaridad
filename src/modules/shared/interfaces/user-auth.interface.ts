@@ -1,9 +1,9 @@
 export interface JwtPayload extends UserAuth {
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
 }
 
 export interface UserAuth {
-  sub: string;
+  id: string;
   role: string;
 }

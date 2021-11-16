@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { ErrorResponse } from '@shared/interfaces';
 import { Request, Response } from 'express';
-import { ResponseDto } from '../utils';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -21,14 +20,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const messageError = error.message;
+    const responseError: ErrorResponse = {
+      code: status,
+      messageError: messageError,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+    };
 
-    response.status(status).json(
-      ResponseDto.format<ErrorResponse>(status, {
-        code: status,
-        messageError: messageError,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-      }),
-    );
+    response.status(status).json(responseError);
   }
 }
