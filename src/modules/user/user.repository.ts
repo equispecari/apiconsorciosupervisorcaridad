@@ -16,4 +16,20 @@ export class UserRepository extends OperationRepository<UserDocument> {
   async findByEmail(email: string) {
     return await this.model.findOne({ email: email });
   }
+
+  async getUsers(tenantId: string, skip?: number, limit?: number) {
+    const findUsers = await this.model
+      .find({ permisions: { $elemMatch: { tenantId } } })
+      .sort({ _id: -1 })
+      .skip(skip || 0)
+      .limit(limit || 5);
+    return findUsers;
+  }
+
+  async getTotalUsers(tenantId: string): Promise<number> {
+    const findOne = await this.model.countDocuments({
+      permisions: { $elemMatch: { tenantId } },
+    });
+    return findOne;
+  }
 }

@@ -1,4 +1,4 @@
-export interface File {
+export interface IFile {
   fieldname: string;
   originalname: string;
   encoding: string;
@@ -6,4 +6,3 @@ export interface File {
   buffer: Buffer;
   size: number;
 }
- 

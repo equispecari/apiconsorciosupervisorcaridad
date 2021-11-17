@@ -3,7 +3,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRepository } from './user.repository';
 import { compare, hash, genSalt } from 'bcryptjs';
-import { UserPermistions } from '@shared/interfaces';
+import { IFile, UserAuth, UserPermistions } from '@shared/interfaces';
+import { QueryUsersDto, updateUserDto, updateUserRoleDto } from './dto';
 
 @Injectable()
 export class UserService {
@@ -30,14 +31,6 @@ export class UserService {
     return await this.userRepository.getOne(id);
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} user`;
-  }
-
   async changePassword(id: string, newPassword: string) {
     const user = await this.userRepository.getOne(id);
 
@@ -56,5 +49,53 @@ export class UserService {
   private async encryptPassword(password: string) {
     const salt = await genSalt(10);
     return await hash(password, salt);
+  }
+
+  // TENANT SERVICE
+
+  async changeAuth(userAuth: UserAuth, data: updateUserRoleDto) {
+    const user = await this.findOne(data.id);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const permisions = user.toObject().permisions;
+
+    const findIndex = permisions.findIndex(
+      (p) => p.role === data.role && p.tenantId === userAuth.tenantId,
+    );
+
+    if (findIndex === -1) {
+      user.permisions.push({ role: data.role, tenantId: userAuth.tenantId });
+    } else {
+      user.permisions[findIndex].role = data.role;
+    }
+
+    await user.save();
+
+    return { message: user };
+  }
+
+  async updateInformation(user: UserAuth, update: updateUserDto) {
+    return await this.userRepository.update(user.id, update);
+  }
+
+  async uploadImg(user: UserAuth, file: IFile) {
+    // const key = await this.userService.upLoadImage(
+    //   id,
+    //   file.buffer,
+    //   file.originalname,
+    // );
+
+    return { message: 'key', statusCode: 200 };
+  }
+
+  async getMyDocuments(user: UserAuth, querys: QueryUsersDto) {
+    const { limit, skip } = querys;
+
+    const users = await this.userRepository.getUsers(user.tenantId,+skip, +limit);
+    const total = await this.userRepository.getTotalUsers(user.tenantId);
+
+    return { data: users, total };
   }
 }
