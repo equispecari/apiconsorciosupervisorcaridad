@@ -91,9 +91,12 @@ export class AuthService {
     const token = this.generateToken({
       id: user._id,
       role: permision.role,
-      tenantId: permision.tenantId,
+      tenantId: permision.tenant as string,
     });
-    return { token };
+    return {
+      token,
+      tenant: { longName: tenant.longName, name: tenant.name, _id: tenant._id },
+    };
   }
 
   async renewToken(tokenAuth: string) {
@@ -115,7 +118,7 @@ export class AuthService {
       token = this.generateToken({
         id: user._id,
         role: permision.role,
-        tenantId: permision.tenantId,
+        tenantId: permision.tenant as string,
       });
     } else {
       token = this.generateToken({ id: user._id });
@@ -177,7 +180,7 @@ export class AuthService {
     tenantId: string,
     permisions: UserPermistions[],
   ): UserPermistions {
-    const permision = permisions.find((p) => p.tenantId === tenantId);
+    const permision = permisions.find((p) => (p.tenant as string) === tenantId);
 
     if (!permision) {
       return null;

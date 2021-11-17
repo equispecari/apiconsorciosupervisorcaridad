@@ -87,7 +87,7 @@ export class TramiteController {
     <h4>Estimad@</h4>
     <p>Su trámite se ha registrado con el siguiente código de registro ${num_serie}, ${url}</p>
     
-    <a href="${this._config.get('AWS_S3_URL')}/${key}">
+    <a href="${reqDoc.pdf}">
       <img 
         title="CARGO"
         src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
@@ -197,20 +197,12 @@ export class TramiteController {
 
     const area = await this._areaService.getUserById(areaId, userAuth.tenantId);
 
-    const Urlprincipal = reqDoc.data.principal
-      ? `${this._config.get('AWS_S3_URL')}/${reqDoc.data.principal}`
-      : '';
-
-    const Urlanexo = reqDoc.data.anexo
-      ? `${this._config.get('AWS_S3_URL')}/${reqDoc.data.anexo}`
-      : '';
-
     if (area && reqDoc.data) {
       let html = `
         <h4>Estimad@ ${area.encargado}</h4>
         <p>Tiene este documento por revisar, ${reqDoc.data.nomenclatura}, ${reqDoc.data.asunto}. </p>
         
-        <a href="${Urlprincipal}" style="text-align: center;">
+        <a href="${reqDoc.data.principal}" style="text-align: center;">
           <img 
             title="PRINCIPAL"
             src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
@@ -219,10 +211,10 @@ export class TramiteController {
         </a>            
       `;
 
-      if (Urlanexo) {
+      if (reqDoc.data.anexo) {
         html =
           html +
-          `<a href="${Urlanexo}" style="text-align: center;">
+          `<a href="${reqDoc.data.anexo}" style="text-align: center;">
         <img 
           title="ANEXOS"
           src="https://summit-dew.s3.us-east-2.amazonaws.com/email/archive.png"
@@ -381,7 +373,7 @@ export class TramiteController {
 
   @Get('document/:id')
   @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
-  async getDocumentById(userAuth: UserAuth, @Param() param: idReqDto) {
+  async getDocumentById(@User() userAuth: UserAuth, @Param() param: idReqDto) {
     const { id } = param;
 
     const reqDoc = await this._reqDocService.getDocById(userAuth, id);

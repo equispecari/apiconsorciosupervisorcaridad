@@ -24,6 +24,12 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Auth()
+  @Get('permitions')
+  findPermmitions(@User() user: UserAuth) {
+    return this.userService.getPermisions(user);
+  }
+
   @Auth(RoleEnum.ADMIN)
   @Put('admin/update/role')
   updateRoles(@Body() body: any) {

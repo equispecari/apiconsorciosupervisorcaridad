@@ -67,11 +67,11 @@ export class UserService {
     const permisions = user.toObject().permisions;
 
     const findIndex = permisions.findIndex(
-      (p) => p.role === data.role && p.tenantId === userAuth.tenantId,
+      (p) => p.role === data.role && (p.tenant as string) === userAuth.tenantId,
     );
 
     if (findIndex === -1) {
-      user.permisions.push({ role: data.role, tenantId: userAuth.tenantId });
+      user.permisions.push({ role: data.role, tenant: userAuth.tenantId });
     } else {
       user.permisions[findIndex].role = data.role;
     }
@@ -89,6 +89,12 @@ export class UserService {
     const key = await this.upLoadImage(user.id, file.buffer, file.originalname);
 
     return { message: key, statusCode: 200 };
+  }
+
+  async getPermisions(user: UserAuth) {
+    const permisions = await this.userRepository.getPermisions(user.id);
+
+    return permisions;
   }
 
   async upLoadImage(

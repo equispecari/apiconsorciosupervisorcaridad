@@ -13,7 +13,7 @@ export class TenantRepository extends OperationRepository<TenantDocument> {
     super(model);
   }
 
-  getByTenantId(tenantId: string): Promise<TenantDocument> {
-    return this.model.findOne({ tenantId }).exec();
+  async getByTenantId(tenantId: string): Promise<TenantDocument> {
+    return await this.model.findOne({ _id: tenantId });
   }
 }

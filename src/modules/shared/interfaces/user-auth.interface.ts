@@ -1,3 +1,5 @@
+import { Tenant } from 'modules/tenant/entities/tenant.entity';
+
 export interface JwtPayload extends UserAuth {
   iat?: number;
   exp?: number;
@@ -10,6 +12,6 @@ export interface UserAuth {
 }
 
 export interface UserPermistions {
-  tenantId: string;
+  tenant: Tenant | string;
   role: string;
 }

@@ -49,7 +49,7 @@ export class User {
   @Prop({ type: String, default: UserTypeEnum.NATURAL })
   type: string;
 
-  @Prop({ type: Array, default: [] })
+  @Prop([{tenant:{type:String, ref:'Tenant'},role:String}])
   permisions: UserPermistions[];
 
   @Prop({ type: String })

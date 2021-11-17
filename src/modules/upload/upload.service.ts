@@ -10,6 +10,7 @@ const path = require('path');
 export class UploadService {
   private readonly s3: S3;
   private readonly bucket: string;
+  private readonly s3Url: string;
 
   constructor(private readonly configService: ConfigService) {
     this.s3 = new S3({
@@ -21,10 +22,15 @@ export class UploadService {
       signatureVersion: configService.get('AWS_VERSION'),
     });
     this.bucket = configService.get('AWS_BUCKET');
+    this.s3Url = configService.get('AWS_S3_URL');
   }
 
   checkImg(originalName: string): Boolean {
     return isImage(originalName);
+  }
+
+  get aws_base_uri(): string {
+    return this.s3Url;
   }
 
   async upLoadS3Object(buffer: Buffer, key: string): Promise<boolean> {
@@ -225,7 +231,10 @@ export class UploadService {
 
     //logo CSM
     doc.image(
-      path.join(__dirname, '../public/images/LOGO-CONSORCIO-SAN-MIGUEL.png'),
+      path.join(
+        __dirname,
+        '../../../public/images/LOGO-CONSORCIO-SAN-MIGUEL.png',
+      ),
       docConf.X / 2 - logo1.x / 2,
       docConf.margin + hespace,
       {
@@ -237,7 +246,7 @@ export class UploadService {
 
     //logo CSM 2
     doc.image(
-      path.join(__dirname, '../public/images/logo-csm.png'),
+      path.join(__dirname, '../../../public/images/logo-csm.png'),
       docConf.X / 2 - logo2.x / 2,
       docConf.Y / 2 + docConf.margin + docConf.margin / 2,
       {
@@ -307,15 +316,30 @@ export class UploadService {
 
     doc.end();
 
-    let key = null;
-    if (!pdfkey) {
-      key = `csm/${data.sede}/cargo/${Date.now()}.pdf`;
-    } else {
-      key = pdfkey;
-    }
+    let key = this.getBaseKey(data.nomenclatura, data.sedeName) + '-cargo.pdf';
 
     const isSent = await this.s3UploadPdf(doc, key);
 
     return isSent ? { key } : { key: null };
+  }
+
+  private getBaseKey(nomenclatura: string, longName: string) {
+    const { fecha, hora } = this.getDateFormat();
+
+    return `${longName.replace(/\s/g, '')}/${fecha}-${nomenclatura.replace(
+      /\s/g,
+      '',
+    )}/${hora}`;
+  }
+
+  private getDateFormat() {
+    const date = new Date();
+
+    const fecha = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+
+    const hora = `${date.getHours()}-${date.getMinutes()}`;
+    return { fecha, hora };
   }
 }
