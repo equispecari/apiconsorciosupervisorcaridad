@@ -11,5 +11,6 @@ import { TenantRepository } from './tenant.repository';
   ],
   controllers: [TenantController],
   providers: [TenantService, TenantRepository],
+  exports: [TenantService],
 })
 export class TenantModule {}

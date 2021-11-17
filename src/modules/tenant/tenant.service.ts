@@ -15,6 +15,10 @@ export class TenantService {
     return this.tenantRepository.list();
   }
 
+  findById(id: string) {
+    return this.tenantRepository.getOne(id);
+  }
+
   update(id: string, updateTenantDto: UpdateTenantDto) {
     return this.tenantRepository.update(id, updateTenantDto);
   }

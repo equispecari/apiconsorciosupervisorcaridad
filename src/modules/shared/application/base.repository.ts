@@ -7,6 +7,9 @@ export interface BaseRepository<T> {
     where?: object;
     relations?: string[];
     filter?: object;
+    sort?: object;
+    skip?: number;
+    limit?: number;
   }): Promise<T[]>;
   create(entity: Partial<T>): Promise<T>;
 }
