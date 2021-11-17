@@ -136,4 +136,14 @@ export class UserService {
 
     return { data: users, total };
   }
+
+  async getUserById(id: string) {
+    const findUser = await this.findOne(id);
+
+    if (!findUser) {
+      throw new BadRequestException('No existe este usuario');
+    }
+
+    return findUser;
+  }
 }
