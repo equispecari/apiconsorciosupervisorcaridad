@@ -1,0 +1,321 @@
+import { Injectable } from '@nestjs/common';
+import { S3 } from 'aws-sdk';
+import { ConfigService } from '@nestjs/config';
+const isImage = require('is-image');
+const PDFDocument = require('pdfkit');
+const qr = require('qr-image');
+const path = require('path');
+
+@Injectable()
+export class UploadService {
+  private readonly s3: S3;
+  private readonly bucket: string;
+
+  constructor(private readonly configService: ConfigService) {
+    this.s3 = new S3({
+      credentials: {
+        accessKeyId: configService.get('AWS_ACCES_ID'),
+        secretAccessKey: configService.get('AWS_SECRET_KEY'),
+      },
+      region: configService.get('AWS_REGION'),
+      signatureVersion: configService.get('AWS_VERSION'),
+    });
+    this.bucket = configService.get('AWS_BUCKET');
+  }
+
+  checkImg(originalName: string): Boolean {
+    return isImage(originalName);
+  }
+
+  async upLoadS3Object(buffer: Buffer, key: string): Promise<boolean> {
+    try {
+      await this.s3
+        .putObject({
+          Bucket: this.bucket,
+          Key: key,
+          ACL: 'public-read',
+          Body: buffer,
+        })
+        .promise();
+      return true;
+    } catch (error) {
+      console.log(error.message);
+      return false;
+    }
+  }
+
+  deleteS3Object(key: string): void {
+    this.s3.deleteObject({ Bucket: this.bucket, Key: key }, (err, data) => {
+      if (err) console.log(err, err.stack);
+      else console.log(data);
+    });
+  }
+
+  startUpload(key: string, fileType: string): Promise<{ uploadId: string }> {
+    try {
+      let params = {
+        Bucket: this.bucket,
+        Key: key,
+        ContentType: fileType,
+        ACL: 'public-read',
+      };
+
+      return new Promise((resolve, reject) =>
+        this.s3.createMultipartUpload(params, (err, uploadData) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ uploadId: uploadData.UploadId });
+          }
+        }),
+      );
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  getUploadUrl(
+    key: string,
+    partNumber: number,
+    uploadId: string,
+  ): Promise<{ presignedUrl: string }> {
+    try {
+      let params = {
+        Bucket: this.bucket,
+        Key: key,
+        PartNumber: partNumber,
+        UploadId: uploadId,
+      };
+
+      return new Promise((resolve, reject) =>
+        this.s3.getSignedUrl('uploadPart', params, (err, presignedUrl) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ presignedUrl });
+          }
+        }),
+      );
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  completeUpload(
+    key: string,
+    parts: { ETag: string; PartNumber: number }[],
+    uploadId: string,
+  ): Promise<{ data }> {
+    try {
+      let params = {
+        Bucket: this.bucket,
+        Key: key,
+        MultipartUpload: {
+          Parts: parts,
+        },
+        UploadId: uploadId,
+      };
+      return new Promise((resolve, reject) =>
+        this.s3.completeMultipartUpload(params, (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ data });
+          }
+        }),
+      );
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async s3UploadPdf(buffer: Buffer, key: string): Promise<Object> {
+    try {
+      await this.s3
+        .upload({
+          Bucket: this.bucket,
+          Key: key,
+          ACL: 'public-read',
+          Body: buffer,
+        })
+        .promise();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async generateQrGrupPdf(
+    data: {
+      sede: string;
+      sedeName: string;
+      nomenclatura: string;
+      tipo: string;
+      asunto: string;
+      folios: string;
+      DOC_ID: string;
+      remitente: string;
+      email_remi: string;
+      codigo: string;
+      fecha: string;
+    },
+    pdfkey?: string,
+  ): Promise<{ key: string }> {
+    const datosDoc = `OFICINA/PROYECTO: ${data.sedeName}\n${data.nomenclatura}\nTIPO: ${data.tipo}\nASUNTO: ${data.asunto}\nFOLIOS: ${data.folios}`;
+    const datosRem = `DOC_ID DNI/RUC: ${data.DOC_ID}\nNOMBRES Y APELLIDOS/RAZON SOCIAL: ${data.remitente}\nCORREO: ${data.email_remi}`;
+    const datosCargo = `Código de registro: ${data.codigo}\nFecha y hora de recepción: ${data.fecha}`;
+    const docConf = {
+      X: 612,
+      Y: 792,
+      margin: 30,
+    };
+    const hespace = 10;
+
+    const logo1 = {
+      x: 180,
+      y: 120,
+    };
+
+    const logo2 = {
+      x: 30,
+      y: 30,
+    };
+    const qrImage = {
+      x: 140,
+      y: 140,
+    };
+
+    //qr
+    let pdf_string = await qr.imageSync(
+      `${this.configService.get('FRONT_URL')}/${data.sede}/buscar/${
+        data.codigo
+      }`,
+      {
+        type: 'png',
+      },
+    );
+
+    const doc = new PDFDocument();
+
+    // cuadro 1
+    doc.polygon(
+      [docConf.margin, docConf.margin],
+      [docConf.X - docConf.margin, docConf.margin],
+      [docConf.X - docConf.margin, docConf.Y - docConf.margin],
+      [docConf.margin, docConf.Y - docConf.margin],
+    );
+    doc.stroke();
+
+    // cuadro 2
+    doc
+      .polygon(
+        [docConf.margin * 5, docConf.Y / 2 + docConf.margin],
+        [docConf.X - docConf.margin * 5, docConf.Y / 2 + docConf.margin],
+        [
+          docConf.X - docConf.margin * 5,
+          docConf.Y - docConf.margin - docConf.margin / 2,
+        ],
+        [docConf.margin * 5, docConf.Y - docConf.margin - docConf.margin / 2],
+      )
+      .lineWidth(2)
+      .stroke('#479426');
+
+    //logo CSM
+    doc.image(
+      path.join(__dirname, '../public/images/LOGO-CONSORCIO-SAN-MIGUEL.png'),
+      docConf.X / 2 - logo1.x / 2,
+      docConf.margin + hespace,
+      {
+        width: logo1.x,
+        height: logo1.y,
+        align: 'center',
+      },
+    );
+
+    //logo CSM 2
+    doc.image(
+      path.join(__dirname, '../public/images/logo-csm.png'),
+      docConf.X / 2 - logo2.x / 2,
+      docConf.Y / 2 + docConf.margin + docConf.margin / 2,
+      {
+        width: logo2.x,
+        height: logo2.y,
+      },
+    );
+
+    //qr image
+    doc.image(
+      pdf_string,
+      docConf.X / 2 - qrImage.x / 2,
+      docConf.Y - qrImage.y - docConf.margin * 2,
+      {
+        width: qrImage.x,
+        height: qrImage.y,
+      },
+    );
+
+    //text 1
+    doc.fontSize(18);
+    doc.text(
+      'I. DATOS DE DOCUMENTO',
+      docConf.margin + hespace,
+      docConf.margin + hespace * 3 + logo1.y,
+    );
+
+    doc.moveDown();
+    doc.fontSize(12);
+    doc.text(datosDoc);
+
+    doc.moveDown();
+    doc.fontSize(18);
+    doc.text('II. DATOS DE REMITENTE');
+
+    doc.moveDown();
+    doc.fontSize(12);
+    doc.text(datosRem);
+
+    doc.moveDown();
+    doc.fontSize(18);
+    doc.text('III. CARGO');
+
+    //text 2
+
+    doc.fontSize(16);
+    doc.text(
+      'MESA DE PARTES VIRTUAL\nCONSORCIO SAN MIGUEL',
+      docConf.margin * 5 + docConf.margin / 2,
+      docConf.Y / 2 + docConf.margin * 3,
+      {
+        align: 'center',
+        width: docConf.X - docConf.margin * 11,
+      },
+    );
+
+    doc.moveDown();
+    doc.fontSize(11);
+    doc.text(datosCargo);
+
+    doc.moveDown();
+    doc.fontSize(16);
+    doc.text('DOCUMENTO RECIBIDO', {
+      align: 'center',
+      width: docConf.X - docConf.margin * 11,
+    });
+
+    doc.end();
+
+    let key = null;
+    if (!pdfkey) {
+      key = `csm/${data.sede}/cargo/${Date.now()}.pdf`;
+    } else {
+      key = pdfkey;
+    }
+
+    const isSent = await this.s3UploadPdf(doc, key);
+
+    return isSent ? { key } : { key: null };
+  }
+}

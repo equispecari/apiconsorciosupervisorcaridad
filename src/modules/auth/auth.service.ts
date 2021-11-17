@@ -21,6 +21,7 @@ import { differenceInMinutes } from 'date-fns';
 import { nanoid } from 'nanoid';
 import { ChooseRole } from './dto/role.dto';
 import { TenantService } from 'modules/tenant/tenant.service';
+import { MailService } from 'modules/mail/mail.service';
 @Injectable()
 export class AuthService {
   private readonly authAdmin: UserSigninDto = {
@@ -34,6 +35,7 @@ export class AuthService {
     private readonly _jwtService: JwtService,
     private readonly userService: UserService,
     private readonly tenantService: TenantService,
+    private readonly mailService: MailService,
   ) {}
 
   async signinAdmin(signinDto: UserSigninDto): Promise<{ token: string }> {
@@ -156,8 +158,6 @@ export class AuthService {
   }
 
   async resetPassSendMail(body: ResetPassSendMail) {
-    // const { tenant }: any = req.params;
-
     const { email } = body;
     const user = await this.userService.findByEmail(email);
     if (!user) {
@@ -165,21 +165,10 @@ export class AuthService {
     }
 
     const token = nanoid();
-    await this.createReset(token, user._id);
-    //SEND email with url
-    // const url = `${this._config.get(
-    //   ConfigEnum.FRONT_URL,
-    // )}/${tenant}/reset-password/${token}`;
-    // const bodyMail = `¡Importante! Si no solicitó recuperar su contraseña ignore este mensaje.
-    // \nPor favor siga el siguiente enlace para restaurar su contraseña: \n${url}
-    // \nEste enlace caducará en 4 horas.`;
-    // this._nodemailder.sendEmailToWithData(
-    //   email,
-    //   'Consorcio San Miguel - Recuperar Contraseña',
-    //   bodyMail,
-    // );
 
-    console.log(token, '<--token');
+    await this.createReset(token, user._id);
+
+    await this.mailService.resetPassword(token, email);
 
     return { message: `Revise su bandeja de entrada` };
   }

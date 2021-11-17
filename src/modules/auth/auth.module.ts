@@ -9,6 +9,7 @@ import { UserModule } from 'modules/user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Auth, AuthSchema } from './entities/auth.entity';
 import { TenantModule } from 'modules/tenant/tenant.module';
+import { MailModule } from 'modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { TenantModule } from 'modules/tenant/tenant.module';
     }),
     UserModule,
     TenantModule,
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

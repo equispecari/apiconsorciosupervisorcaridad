@@ -5,10 +5,15 @@ import { UserRepository } from './user.repository';
 import { compare, hash, genSalt } from 'bcryptjs';
 import { IFile, UserAuth, UserPermistions } from '@shared/interfaces';
 import { QueryUsersDto, updateUserDto, updateUserRoleDto } from './dto';
+import { UploadService } from '../upload/upload.service';
+const randomstring = require('randomstring');
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly uploadService: UploadService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     createUserDto.password = await this.encryptPassword(createUserDto.password);
@@ -81,19 +86,52 @@ export class UserService {
   }
 
   async uploadImg(user: UserAuth, file: IFile) {
-    // const key = await this.userService.upLoadImage(
-    //   id,
-    //   file.buffer,
-    //   file.originalname,
-    // );
+    const key = await this.upLoadImage(user.id, file.buffer, file.originalname);
 
-    return { message: 'key', statusCode: 200 };
+    return { message: key, statusCode: 200 };
+  }
+
+  async upLoadImage(
+    id: string,
+    buffer: Buffer,
+    originalname: string,
+  ): Promise<string> {
+    const isImage = this.uploadService.checkImg(originalname);
+
+    const user = await this.userRepository.getOne(id);
+
+    if (!isImage) {
+      throw new BadRequestException('Suba una imagen.');
+    }
+    const afterDot = originalname.split('.').pop();
+
+    const key = `user/${randomstring.generate({
+      length: 10,
+      charset: 'numeric',
+    })}.${afterDot}`;
+
+    const upload = await this.uploadService.upLoadS3Object(buffer, key);
+    if (!upload) {
+      throw new BadRequestException('No se pudo subir imagen.');
+    }
+
+    if (user.img) {
+      this.uploadService.deleteS3Object(user.img);
+    }
+    user.img = key;
+    await user.save();
+
+    return key;
   }
 
   async getMyDocuments(user: UserAuth, querys: QueryUsersDto) {
     const { limit, skip } = querys;
 
-    const users = await this.userRepository.getUsers(user.tenantId,+skip, +limit);
+    const users = await this.userRepository.getUsers(
+      user.tenantId,
+      +skip,
+      +limit,
+    );
     const total = await this.userRepository.getTotalUsers(user.tenantId);
 
     return { data: users, total };
