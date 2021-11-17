@@ -46,9 +46,10 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales invalidas');
     }
 
-    const token = this.generateToken(RoleEnum.ADMIN, {
+    const token = this.generateToken({
       id: RoleEnum.ADMIN,
       role: RoleEnum.ADMIN,
+      tenantId: RoleEnum.ADMIN,
     });
     return Promise.resolve({ token });
   }
@@ -63,12 +64,7 @@ export class AuthService {
 
     const user = await this.userService.create(newUser);
 
-    const payload: JwtPayload = {
-      id: user._id,
-      role: null,
-    };
-
-    const token = this.generateToken(user._id, null);
+    const token = this.generateToken({ id: user._id });
 
     return { user, token };
   }
@@ -84,8 +80,17 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('No esta autorizado');
     }
-    const role = this.selectRole(permition.tenantId, user.roles);
-    const token = this.generateToken(user._id, role);
+    const permision = this.selectPermision(permition.tenantId, user.permisions);
+
+    if (!permision) {
+      throw new UnauthorizedException('No esta autorizado');
+    }
+
+    const token = this.generateToken({
+      id: user._id,
+      role: permision.role,
+      tenantId: permision.tenantId,
+    });
     return { token };
   }
 
@@ -100,12 +105,19 @@ export class AuthService {
       throw new UnauthorizedException('No esta autorizado');
     }
 
-    let role = null;
-    if (!!payload.role) {
-      role = this.selectRole(payload.role.id, user.roles);
-    }
+    const permision = this.selectPermision(payload.tenantId, user.permisions);
 
-    const token = this.generateToken(user._id, role);
+    let token: string;
+
+    if (permision) {
+      token = this.generateToken({
+        id: user._id,
+        role: permision.role,
+        tenantId: permision.tenantId,
+      });
+    } else {
+      token = this.generateToken({ id: user._id });
+    }
 
     return { token, user };
   }
@@ -124,19 +136,13 @@ export class AuthService {
       throw new UnauthorizedException('credenciales invalidas');
     }
 
-    const token = this.generateToken(user._id, null);
+    const token = this.generateToken({ id: user._id });
 
     return { token, user };
   }
 
-  private generateToken(userId: string, role: UserPermistions | null) {
-    const newPayload: JwtPayload = {
-      id: userId,
-      role,
-    };
-
-    const newtoken = this._jwtService.sign(newPayload);
-    return newtoken;
+  private generateToken(payload: JwtPayload) {
+    return this._jwtService.sign(payload);
   }
 
   async resetPassword(body: ResetPassword) {
@@ -178,17 +184,17 @@ export class AuthService {
     return { message: `Revise su bandeja de entrada` };
   }
 
-  private selectRole(
+  private selectPermision(
     tenantId: string,
-    roles: UserPermistions[],
+    permisions: UserPermistions[],
   ): UserPermistions {
-    const tenantRole = roles.find((r) => r.id === tenantId);
+    const permision = permisions.find((p) => p.tenantId === tenantId);
 
-    if (!tenantRole) {
+    if (!permision) {
       return null;
     }
 
-    return tenantRole;
+    return permision;
   }
 
   private async createReset(token: string, id: string): Promise<boolean> {

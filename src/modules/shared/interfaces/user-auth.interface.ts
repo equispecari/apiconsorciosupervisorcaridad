@@ -5,10 +5,11 @@ export interface JwtPayload extends UserAuth {
 
 export interface UserAuth {
   id: string;
-  role: UserPermistions | null;
+  role?: string;
+  tenantId?: string;
 }
 
 export interface UserPermistions {
-  id: string;
+  tenantId: string;
   role: string;
 }

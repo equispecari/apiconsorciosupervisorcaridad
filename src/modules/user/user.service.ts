@@ -18,16 +18,16 @@ export class UserService {
     return this.userRepository.list();
   }
 
+  async updateRoles(id: string, permisions: UserPermistions[]) {
+    return await this.userRepository.update(id, { permisions });
+  }
+
   async findByEmail(email: string) {
     return await this.userRepository.findByEmail(email);
   }
 
   async findOne(id: string) {
     return await this.userRepository.getOne(id);
-  }
-
-  async updateRoles(id: string, roles: UserPermistions[]) {
-    return await this.userRepository.update(id, { roles });
   }
 
   update(id: string, updateUserDto: UpdateUserDto) {

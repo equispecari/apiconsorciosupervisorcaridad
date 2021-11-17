@@ -50,7 +50,7 @@ export class User {
   type: string;
 
   @Prop({ type: Array, default: [] })
-  roles: UserPermistions[];
+  permisions: UserPermistions[];
 
   @Prop({ type: String })
   img: string;

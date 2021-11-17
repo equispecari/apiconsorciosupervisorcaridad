@@ -44,9 +44,6 @@ export abstract class OperationRepository<T extends Document>
       where: {},
       relations: [],
       filters: {},
-      sort: { _id: -1 },
-      skip: 0,
-      limit: 5,
     },
   ): Promise<T[]> {
     const query = this.entityModel.find(
@@ -57,15 +54,6 @@ export abstract class OperationRepository<T extends Document>
     options.relations.forEach((relation) => {
       query.populate(relation);
     });
-    if (options.sort) {
-      query.sort(options.sort);
-    }
-    if (options.skip) {
-      query.skip(options.skip);
-    }
-    if (options.limit) {
-      query.limit(options.limit);
-    }
 
     try {
       const data = await query.exec();
