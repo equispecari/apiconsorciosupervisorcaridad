@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, Param } from '@nestjs/common';
+import { RoleEnum } from '@shared/constants';
 import { Auth, User } from '@shared/decorators';
 import { UserAuth } from '@shared/interfaces';
 import { Request } from 'express';
@@ -25,10 +26,10 @@ export class AuthController {
     return await this.authService.createUser(userDni);
   }
 
-  @Auth()
-  @Post('choose/role')
-  async chooseRole(@Body() body: ChooseRole, @User() user: UserAuth) {
-    return await this.authService.chooseRole(body, user);
+  @Auth(RoleEnum.ADMIN)
+  @Get('select/sede/:sede')
+  async selectSede(@Param('sede') sede: string, @User() user: UserAuth) {
+    return await this.authService.chooseRole(sede, user);
   }
 
   @Post('user')

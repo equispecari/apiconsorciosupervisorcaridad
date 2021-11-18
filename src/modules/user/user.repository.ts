@@ -32,11 +32,4 @@ export class UserRepository extends OperationRepository<UserDocument> {
     });
     return findOne;
   }
-
-  async getPermisions(userId: string) {
-    const user = await this.model
-      .findOne({ _id: userId })
-      .populate('permisions.tenant');
-    return user.permisions;
-  }
 }

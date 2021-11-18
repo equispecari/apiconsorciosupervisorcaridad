@@ -56,30 +56,7 @@ export class UserService {
     return await hash(password, salt);
   }
 
-  // TENANT SERVICE
-
-  async changeAuth(userAuth: UserAuth, data: updateUserRoleDto) {
-    const user = await this.findOne(data.id);
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-
-    const permisions = user.toObject().permisions;
-
-    const findIndex = permisions.findIndex(
-      (p) => p.role === data.role && (p.tenant as string) === userAuth.tenantId,
-    );
-
-    if (findIndex === -1) {
-      user.permisions.push({ role: data.role, tenant: userAuth.tenantId });
-    } else {
-      user.permisions[findIndex].role = data.role;
-    }
-
-    await user.save();
-
-    return { message: user };
-  }
+  
 
   async updateInformation(user: UserAuth, update: updateUserDto) {
     return await this.userRepository.update(user.id, update);
@@ -91,11 +68,6 @@ export class UserService {
     return { message: key, statusCode: 200 };
   }
 
-  async getPermisions(user: UserAuth) {
-    const permisions = await this.userRepository.getPermisions(user.id);
-
-    return permisions;
-  }
 
   async upLoadImage(
     id: string,

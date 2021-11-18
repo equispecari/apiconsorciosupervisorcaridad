@@ -180,9 +180,12 @@ export class UploadService {
     };
     const hespace = 10;
 
+    const nombre_sede = 'CONSORCIO SUPERVISOR CARIDAD';
+    const text_y = 40;
+
     const logo1 = {
-      x: 180,
-      y: 120,
+      x: 80,
+      y: 90,
     };
 
     const logo2 = {
@@ -227,14 +230,11 @@ export class UploadService {
         [docConf.margin * 5, docConf.Y - docConf.margin - docConf.margin / 2],
       )
       .lineWidth(2)
-      .stroke('#479426');
+      .stroke('#33AAFF');
 
     //logo CSM
     doc.image(
-      path.join(
-        __dirname,
-        '../../../public/images/LOGO-CONSORCIO-SAN-MIGUEL.png',
-      ),
+      path.join(__dirname, '../../../public/images/logo.png'),
       docConf.X / 2 - logo1.x / 2,
       docConf.margin + hespace,
       {
@@ -244,14 +244,14 @@ export class UploadService {
       },
     );
 
-    //logo CSM 2
-    doc.image(
-      path.join(__dirname, '../../../public/images/logo-csm.png'),
-      docConf.X / 2 - logo2.x / 2,
-      docConf.Y / 2 + docConf.margin + docConf.margin / 2,
+    doc.fontSize(18);
+    doc.text(
+      ` ${nombre_sede}`,
+      docConf.margin + hespace,
+      docConf.margin + hespace * 3 + logo1.y - 15,
       {
-        width: logo2.x,
-        height: logo2.y,
+        width: docConf.X - docConf.margin * 2 - hespace,
+        align: 'center',
       },
     );
 
@@ -266,13 +266,9 @@ export class UploadService {
       },
     );
 
-    //text 1
+    doc.moveDown();
     doc.fontSize(18);
-    doc.text(
-      'I. DATOS DE DOCUMENTO',
-      docConf.margin + hespace,
-      docConf.margin + hespace * 3 + logo1.y,
-    );
+    doc.text('I. DATOS DE DOCUMENTO');
 
     doc.moveDown();
     doc.fontSize(12);
@@ -294,9 +290,9 @@ export class UploadService {
 
     doc.fontSize(16);
     doc.text(
-      'MESA DE PARTES VIRTUAL\nCONSORCIO SAN MIGUEL',
+      `MESA DE PARTES VIRTUAL\n${nombre_sede}`,
       docConf.margin * 5 + docConf.margin / 2,
-      docConf.Y / 2 + docConf.margin * 3,
+      docConf.Y / 2 + docConf.margin * 3 - text_y,
       {
         align: 'center',
         width: docConf.X - docConf.margin * 11,

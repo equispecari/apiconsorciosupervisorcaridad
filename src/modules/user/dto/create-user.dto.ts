@@ -1,4 +1,4 @@
-import { IsEmail, IsNumberString, IsString } from 'class-validator';
+import { IsEmail, IsNumberString, IsOptional, IsString } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
@@ -11,8 +11,15 @@ export class CreateUserDto {
   @Expose()
   name: string;
 
+  @IsOptional()
+  @IsString()
   @Expose()
   lastname: string;
+
+  @IsOptional()
+  @IsString()
+  @Expose()
+  tenant: string;
 
   @IsString()
   @Expose()

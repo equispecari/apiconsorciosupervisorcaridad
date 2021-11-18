@@ -61,3 +61,9 @@ export class Tenant {
 }
 
 export const TenantSchema = SchemaFactory.createForClass(Tenant);
+
+TenantSchema.methods.toJSON = function (this: TenantDocument) {
+  const tenant = this;
+
+  return { _id: tenant._id, name: tenant.name, longName: tenant.longName };
+};

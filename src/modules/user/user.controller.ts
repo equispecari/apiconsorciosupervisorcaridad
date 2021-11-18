@@ -12,7 +12,7 @@ import { Auth, User } from '@shared/decorators';
 import { RoleEnum } from '@shared/constants';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IFile, UserAuth } from '@shared/interfaces';
-import { QueryUsersDto, updateUserDto, updateUserRoleDto } from './dto';
+import { QueryUsersDto, updateUserDto } from './dto';
 
 @Controller('user')
 export class UserController {
@@ -24,26 +24,19 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @Auth()
-  @Get('permitions')
-  findPermmitions(@User() user: UserAuth) {
-    return this.userService.getPermisions(user);
-  }
-
   @Auth(RoleEnum.ADMIN)
   @Put('admin/update/role')
   updateRoles(@Body() body: any) {
     return this.userService.updateRoles(body.user, body.permisions);
   }
 
-  @Put('changeRole')
-  @Auth(RoleEnum.MODERATOR, RoleEnum.ADMINISTRADOR)
-  async changeAuth(@User() user: UserAuth, @Body() data: updateUserRoleDto) {
-    return await this.userService.changeAuth(user, data);
-  }
-
   @Put('')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async updateInformation(
     @User() user: UserAuth,
     @Body() update: updateUserDto,
@@ -53,13 +46,18 @@ export class UserController {
 
   @Put('uploadImg')
   @UseInterceptors(FileInterceptor('image'))
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async uploadImg(@User() user: UserAuth, @UploadedFile() file: IFile) {
     return await this.userService.uploadImg(user, file);
   }
 
   @Get('getall')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async getMyDocuments(@User() user: UserAuth, @Query() querys: QueryUsersDto) {
     return await this.userService.getMyDocuments(user, querys);
   }

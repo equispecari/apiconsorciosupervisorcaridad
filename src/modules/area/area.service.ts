@@ -17,7 +17,7 @@ export class AreaService {
     private readonly _model: Model<IArea>,
   ) {}
 
-  async getUserById(id: string, tenantId: string): Promise<IArea> {
+  async getUserById(id: string, tenantId: string) {
     const findOne = await this._model.findOne({ _id: id, tenant: tenantId });
 
     if (!findOne) {
@@ -43,23 +43,16 @@ export class AreaService {
     update: CreateAreaDto,
     id: string,
   ): Promise<void> {
-    const updated: any = await this._model.updateOne(
+    const updated = await this._model.updateOne(
       { _id: id, tenant: userAuth.tenantId },
       update,
     );
-
-    if (!updated.ok) {
-      throw new InternalServerErrorException('No se pudo updatear');
-    }
   }
 
   async deleteArea(userAuth: UserAuth, id: string): Promise<void> {
-    const deleted: any = await this._model.deleteOne({
+    const deleted = await this._model.deleteOne({
       _id: id,
       tenant: userAuth.tenantId,
     });
-    if (!deleted.ok) {
-      throw new InternalServerErrorException('No se pudo eliminar');
-    }
   }
 }

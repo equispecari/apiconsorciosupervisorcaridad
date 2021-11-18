@@ -18,7 +18,7 @@ export class AreaController {
   constructor(private readonly _areaService: AreaService) {}
 
   @Post('create')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async creaTramite(@User() userAuth: UserAuth, @Body() data: CreateAreaDto) {
     const nuevo = await this._areaService.create(userAuth, data);
 
@@ -26,7 +26,7 @@ export class AreaController {
   }
 
   @Put(':id')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async updateTramite(
     @User() userAuth: UserAuth,
     @Body() data: CreateAreaDto,
@@ -38,7 +38,7 @@ export class AreaController {
   }
 
   @Delete(':id')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async deleteTramite(@User() userAuth: UserAuth, @Param('id') id: string) {
     await this._areaService.deleteArea(userAuth, id);
 
@@ -46,7 +46,7 @@ export class AreaController {
   }
 
   @Get('getall')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async getMyDocuments(@User() userAuth: UserAuth) {
     return await this._areaService.getAll(userAuth);
   }

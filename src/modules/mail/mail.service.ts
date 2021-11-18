@@ -5,52 +5,146 @@ const nodemailer = require('nodemailer');
 @Injectable()
 export class MailService {
   private transporter;
+  private web_uri;
+  private name_bussines = 'Consorcio Supervisor Caridad';
   constructor(private readonly _configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: _configService.get('SMTP_HOST'),
       port: 465,
-      secure: true, // true for 465, false for other ports
+      secure: true,
+      tls: {
+        rejectUnauthorized: false,
+      },
       auth: {
         user: _configService.get('SMTP_USER'), // generated ethereal user
         pass: _configService.get('SMTP_PASS'), // generated ethereal password
       },
     });
+    this.web_uri = _configService.get('FRONT_URL');
   }
 
-  async sendEmailToWithData(
-    to: string,
-    subject: string,
-    body: string,
-  ): Promise<void> {
+  async sendEmailToWithData(to: string, subject: string, body: string) {
     try {
-      // send mail with defined transport object
       let info = await this.transporter.sendMail({
-        from: `Consorcio San Miguel - Mesa de partes virtual<${this._configService.get(
+        from: `${
+          this.name_bussines
+        } - Mesa de partes virtual<${this._configService.get(
           'SMTP_FROM_MAIL',
-        )}>`, // sender address
-        to: to, // list of receivers
-        subject: subject, // Subject line
-        html: body, // html body
+        )}>`,
+        to: to,
+        subject: subject,
+        html: body,
       });
 
       console.log('Message sent: %s', info.messageId);
-      // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
     } catch (error) {
-      console.log(error.message);
+      console.log('error', error.message);
     }
   }
 
-  async resetPassword(token: string, email: string) {
+  resetPassword(token: string, email: string) {
     const url = `${this._configService.get(
       'FRONT_URL',
     )}/reset-password/${token}`;
     const bodyMail = `¡Importante! Si no solicitó recuperar su contraseña ignore este mensaje.
     \nPor favor siga el siguiente enlace para restaurar su contraseña: \n${url}
     \nEste enlace caducará en 4 horas.`;
-    await this.sendEmailToWithData(
+    this.sendEmailToWithData(
       email,
-      'Consorcio San Miguel - Recuperar Contraseña',
+      '${this.name_bussines} - Recuperar Contraseña',
       bodyMail,
+    );
+  }
+
+  registerDocument(email: string, num_serie: string, key: string) {
+    const url = `${this.web_uri}/buscar/${num_serie}`;
+
+    const html = `
+    <h4>Estimad@</h4>
+    <p>Su trámite se ha registrado con el siguiente código de registro ${num_serie}, ${url}</p>
+    
+    <a href="${key}">
+      <img 
+        title="CARGO"
+        src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
+        width=75" 
+        height="75">
+    </a>
+    </br>
+    </br>
+    <hr>
+    <div style="text-align: right;">
+      <p>Saludos,</br>
+      Mesa de Partes Virtual</br>
+      ${this.name_bussines}</p>
+    </div>
+    
+    `;
+    this.sendEmailToWithData(
+      email,
+      '${this.name_bussines} - Registro y cargo',
+      html,
+    );
+  }
+
+  deribarDoc(
+    to: { encargado: string; email: string },
+    data: {
+      nomenclatura: string;
+      asunto: string;
+      principal: string;
+      anexo?: string;
+    },
+  ) {
+    let html = `
+        <h4>Estimad@ ${to.encargado}</h4>
+        <p>Tiene este documento por revisar, ${data.nomenclatura}, ${data.asunto}. </p>
+        
+        <a href="${this.web_uri}/${data.principal}" style="text-align: center;">
+          <img 
+            title="PRINCIPAL"
+            src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
+            width=75" 
+            height="75">
+        </a>            
+      `;
+
+    if (data.anexo) {
+      html =
+        html +
+        `<a href="${data.anexo}" style="text-align: center;">
+        <img 
+          title="ANEXOS"
+          src="https://summit-dew.s3.us-east-2.amazonaws.com/email/archive.png"
+          width=75" 
+          height="75">
+      </a>
+      </br>
+      </br>
+      <hr>
+      <div style="text-align: right;">
+        <p>Saludos,</br>
+        Mesa de Partes Virtual</br>
+        ${this.name_bussines}</p>
+      </div>  `;
+    } else {
+      html =
+        html +
+        `
+      </br>
+      </br>
+      <hr>
+      <div style="text-align: right;">
+        <p>Saludos,</br>
+        Mesa de Partes Virtual</br>
+        ${this.name_bussines}</p>
+      </div>  `;
+    }
+
+    this.sendEmailToWithData(
+      to.email,
+      `${this.name_bussines} - ${data.asunto}`,
+      html,
     );
   }
 }

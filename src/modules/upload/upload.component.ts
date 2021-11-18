@@ -21,7 +21,12 @@ export class UploadController {
   constructor(private readonly _awsS3Service: UploadService) {}
 
   @Get('start-upload')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async startUpload(@Query() query: any) {
     let filetype = query.fileType || '';
     let fileName = query.fileName || '';
@@ -35,7 +40,12 @@ export class UploadController {
   }
 
   @Get('get-upload-url')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async createTramite(@Query() query: any) {
     const { fileName, partNumber, uploadId } = query;
 
@@ -49,7 +59,12 @@ export class UploadController {
   }
 
   @Post('complete-upload')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async completeUpload(@Body() body: UploadBodyPresigned) {
     const { fileName, parts, uploadId } = body;
     const { data } = await this._awsS3Service.completeUpload(
@@ -63,7 +78,12 @@ export class UploadController {
 
   @Put('pdf-upload')
   @UseInterceptors(FileInterceptor('file'))
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async pdfUpload(@Query() query: any, @UploadedFile() file: IFile) {
     let fileName = query.fileName || '';
     const isUpload = await this._awsS3Service.s3UploadPdf(

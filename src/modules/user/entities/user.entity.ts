@@ -1,7 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { UserTypeEnum } from '@shared/constants';
-import { UserPermistions } from '@shared/interfaces';
-
+import { RoleEnum, UserTypeEnum } from '@shared/constants';
 import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
@@ -49,8 +47,11 @@ export class User {
   @Prop({ type: String, default: UserTypeEnum.NATURAL })
   type: string;
 
-  @Prop([{tenant:{type:String, ref:'Tenant'},role:String}])
-  permisions: UserPermistions[];
+  @Prop({ type: String })
+  tenant: string;
+
+  @Prop({ type: String, default: RoleEnum.USER })
+  role: string;
 
   @Prop({ type: String })
   img: string;

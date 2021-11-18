@@ -20,7 +20,6 @@ import {
 import { AreaService } from '../area/area.service';
 import { TenantService } from '../tenant/tenant.service';
 import { repeat } from 'lodash';
-import { ConfigService } from '@nestjs/config';
 
 const moment = require('moment-timezone');
 import { HoursOfAttention } from '../shared/utils/hours-of-attention';
@@ -40,12 +39,16 @@ export class TramiteController {
     private readonly _awsS3Service: UploadService,
     private readonly _incrementService: TenantService,
     private readonly _nodemailder: MailService,
-    private readonly _config: ConfigService,
     private readonly _areaService: AreaService,
   ) {}
 
   @Post('create')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async createTramite(
     @User() userAuth: UserAuth,
     @Body() create: CreateReqInfoDto,
@@ -53,7 +56,10 @@ export class TramiteController {
     const inc = await this._incrementService.getNumDocSede(userAuth.tenantId); //TODO SEDE
 
     const num_serie =
-      inc.name + repeat('0', 6 - inc.nro_doc.toString().length) + inc.nro_doc;
+      inc.name.toUpperCase().trim() +
+      '-' +
+      repeat('0', 3 - inc.nro_doc.toString().length) +
+      inc.nro_doc;
 
     const user = await this._userService.getUserById(userAuth.id);
 
@@ -80,35 +86,10 @@ export class TramiteController {
       sede: inc.name,
       sedeName: inc.longName,
     });
-    const url = `${this._config.get('FRONT_URL')}/buscar/${num_serie}`;
+
+    this._nodemailder.registerDocument(user.email, num_serie, key);
 
     reqDoc.pdf = key;
-    const html = `
-    <h4>Estimad@</h4>
-    <p>Su trámite se ha registrado con el siguiente código de registro ${num_serie}, ${url}</p>
-    
-    <a href="${reqDoc.pdf}">
-      <img 
-        title="CARGO"
-        src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
-        width=75" 
-        height="75">
-    </a>
-    </br>
-    </br>
-    <hr>
-    <div style="text-align: right;">
-      <p>Saludos,</br>
-      Mesa de Partes Virtual</br>
-      Consorcio San Miguel</p>
-    </div>
-    
-    `;
-    this._nodemailder.sendEmailToWithData(
-      user.email,
-      'Consorcio San Miguel - Registro y cargo',
-      html,
-    );
 
     await reqDoc.save();
 
@@ -116,14 +97,18 @@ export class TramiteController {
   }
 
   @Post('update/:id')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async updateTramite(
     @User() userAuth: UserAuth,
     @Body() update: UpdateReqInfoDto,
+    @Param('id') id: string,
   ) {
-    return null;
-
-    const reqDoc = await this._reqDocService.getUDocById(userAuth.tenantId);
+    const reqDoc = await this._reqDocService.getUDocById(id);
 
     if (reqDoc.estado !== StateEnum.OBSERVAR) {
       throw new BadRequestException('El documento ya fue derivado o rechazado');
@@ -168,7 +153,12 @@ export class TramiteController {
   }
 
   @Put('delete/object')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async deleteUploadObj(@Body('key') key: string) {
     this._awsS3Service.deleteS3Object(key);
 
@@ -176,7 +166,7 @@ export class TramiteController {
   }
 
   @Put('deribar')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async deribaTramite(@User() userAuth: UserAuth, @Body() data: DerivarReqDto) {
     const { areaId, docId } = data;
 
@@ -197,58 +187,10 @@ export class TramiteController {
 
     const area = await this._areaService.getUserById(areaId, userAuth.tenantId);
 
-    if (area && reqDoc.data) {
-      let html = `
-        <h4>Estimad@ ${area.encargado}</h4>
-        <p>Tiene este documento por revisar, ${reqDoc.data.nomenclatura}, ${reqDoc.data.asunto}. </p>
-        
-        <a href="${reqDoc.data.principal}" style="text-align: center;">
-          <img 
-            title="PRINCIPAL"
-            src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
-            width=75" 
-            height="75">
-        </a>            
-      `;
-
-      if (reqDoc.data.anexo) {
-        html =
-          html +
-          `<a href="${reqDoc.data.anexo}" style="text-align: center;">
-        <img 
-          title="ANEXOS"
-          src="https://summit-dew.s3.us-east-2.amazonaws.com/email/archive.png"
-          width=75" 
-          height="75">
-      </a>
-      </br>
-      </br>
-      <hr>
-      <div style="text-align: right;">
-        <p>Saludos,</br>
-        Mesa de Partes Virtual</br>
-        Consorcio San Miguel</p>
-      </div>  `;
-      } else {
-        html =
-          html +
-          `
-      </br>
-      </br>
-      <hr>
-      <div style="text-align: right;">
-        <p>Saludos,</br>
-        Mesa de Partes Virtual</br>
-        Consorcio SanMiguel</p>
-      </div>  `;
-      }
-
-      this._nodemailder.sendEmailToWithData(
-        area.email,
-        'Consorcio SanMiguel - ' + reqDoc.data.asunto,
-        html,
-      );
-    }
+    this._nodemailder.deribarDoc(
+      { email: area.email, encargado: area.encargado },
+      reqDoc.data,
+    );
 
     await reqDoc.save();
 
@@ -256,7 +198,7 @@ export class TramiteController {
   }
 
   @Put('observar')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async observarTramite(
     @User() userAuth: UserAuth,
     @Body() data: ObservacionesReqDto,
@@ -281,7 +223,7 @@ export class TramiteController {
   }
 
   @Put('rechazar')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async rechazarTramite(
     @User() userAuth: UserAuth,
     @Body() data: RechazadoReqDto,
@@ -302,7 +244,7 @@ export class TramiteController {
   }
 
   @Get('documents')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR)
+  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.ADMIN)
   async getDocuments(
     @User() userAuth: UserAuth,
     @Query() querys: QuerysReqDto,
@@ -332,7 +274,12 @@ export class TramiteController {
   }
 
   @Get('mydocuments')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async getMyDocuments(
     @User() userAuth: UserAuth,
     @Query() querys: QuerysReqDto,
@@ -372,7 +319,12 @@ export class TramiteController {
   }
 
   @Get('document/:id')
-  @Auth(RoleEnum.ADMINISTRADOR, RoleEnum.MODERATOR, RoleEnum.USER)
+  @Auth(
+    RoleEnum.ADMINISTRADOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.USER,
+    RoleEnum.ADMIN,
+  )
   async getDocumentById(@User() userAuth: UserAuth, @Param() param: idReqDto) {
     const { id } = param;
 

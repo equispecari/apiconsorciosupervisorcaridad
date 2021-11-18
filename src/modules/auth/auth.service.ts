@@ -66,13 +66,17 @@ export class AuthService {
 
     const user = await this.userService.create(newUser);
 
-    const token = this.generateToken({ id: user._id });
+    const token = this.generateToken({
+      id: user._id,
+      tenantId: user.tenant,
+      role: user.role,
+    });
 
     return { user, token };
   }
 
-  async chooseRole(permition: ChooseRole, userAuth: UserAuth) {
-    const tenant = await this.tenantService.findById(permition.tenantId);
+  async chooseRole(sede: string, userAuth: UserAuth) {
+    const tenant = await this.tenantService.findById(sede);
 
     if (!tenant) {
       throw new UnauthorizedException('No esta autorizado');
@@ -82,20 +86,15 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('No esta autorizado');
     }
-    const permision = this.selectPermision(permition.tenantId, user.permisions);
-
-    if (!permision) {
-      throw new UnauthorizedException('No esta autorizado');
-    }
 
     const token = this.generateToken({
       id: user._id,
-      role: permision.role,
-      tenantId: permision.tenant as string,
+      role: user.role,
+      tenantId: tenant._id,
     });
     return {
       token,
-      tenant: { longName: tenant.longName, name: tenant.name, _id: tenant._id },
+      tenant,
     };
   }
 
@@ -110,21 +109,15 @@ export class AuthService {
       throw new UnauthorizedException('No esta autorizado');
     }
 
-    const permision = this.selectPermision(payload.tenantId, user.permisions);
+    const tenant = await this.tenantService.findById(payload.tenantId);
 
-    let token: string;
+    const token = this.generateToken({
+      id: user._id,
+      role: user.role,
+      tenantId: user.role === RoleEnum.ADMIN ? payload.tenantId : user.tenant,
+    });
 
-    if (permision) {
-      token = this.generateToken({
-        id: user._id,
-        role: permision.role,
-        tenantId: permision.tenant as string,
-      });
-    } else {
-      token = this.generateToken({ id: user._id });
-    }
-
-    return { token, user };
+    return { token, user, tenant };
   }
 
   async signin(userSigninDto: UserSigninDto) {
@@ -135,13 +128,20 @@ export class AuthService {
       throw new NotFoundException('User no existe');
     }
 
-    const isMatch = this.userService.comparePasswords(password, user.password);
+    const isMatch = await this.userService.comparePasswords(
+      password,
+      user.password,
+    );
 
     if (!isMatch) {
       throw new UnauthorizedException('credenciales invalidas');
     }
 
-    const token = this.generateToken({ id: user._id });
+    const token = this.generateToken({
+      id: user._id,
+      role: user.role,
+      tenantId: user.tenant,
+    });
 
     return { token, user };
   }
@@ -174,19 +174,6 @@ export class AuthService {
     await this.mailService.resetPassword(token, email);
 
     return { message: `Revise su bandeja de entrada` };
-  }
-
-  private selectPermision(
-    tenantId: string,
-    permisions: UserPermistions[],
-  ): UserPermistions {
-    const permision = permisions.find((p) => (p.tenant as string) === tenantId);
-
-    if (!permision) {
-      return null;
-    }
-
-    return permision;
   }
 
   private async createReset(token: string, id: string): Promise<boolean> {
