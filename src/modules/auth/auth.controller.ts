@@ -10,7 +10,6 @@ import {
   ResetPassword,
   UserSigninDto,
 } from './dto';
-import { ChooseRole } from './dto/role.dto';
 
 @Controller('auth')
 export class AuthController {

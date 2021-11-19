@@ -9,15 +9,15 @@ export class MailService {
   private name_bussines = 'Consorcio Supervisor Caridad';
   constructor(private readonly _configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      host: _configService.get('SMTP_HOST'),
+      host: _configService.get<string>('SMTP_HOST'),
       port: 465,
       secure: true,
       tls: {
         rejectUnauthorized: false,
       },
       auth: {
-        user: _configService.get('SMTP_USER'), // generated ethereal user
-        pass: _configService.get('SMTP_PASS'), // generated ethereal password
+        user: _configService.get<string>('SMTP_USER'),
+        pass: _configService.get<string>('SMTP_PASS'),
       },
     });
     this.web_uri = _configService.get('FRONT_URL');
@@ -51,7 +51,7 @@ export class MailService {
     \nEste enlace caducará en 4 horas.`;
     this.sendEmailToWithData(
       email,
-      '${this.name_bussines} - Recuperar Contraseña',
+      `${this.name_bussines} - Recuperar Contraseña`,
       bodyMail,
     );
   }
