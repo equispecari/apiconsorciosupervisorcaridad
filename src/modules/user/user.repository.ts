@@ -19,7 +19,7 @@ export class UserRepository extends OperationRepository<UserDocument> {
 
   async getUsers(tenantId: string, skip?: number, limit?: number) {
     const findUsers = await this.model
-      .find({ permisions: { $elemMatch: { tenantId } } })
+      .find({ tenant: tenantId })
       .sort({ _id: -1 })
       .skip(skip || 0)
       .limit(limit || 5);
@@ -28,7 +28,7 @@ export class UserRepository extends OperationRepository<UserDocument> {
 
   async getTotalUsers(tenantId: string): Promise<number> {
     const findOne = await this.model.countDocuments({
-      permisions: { $elemMatch: { tenantId } },
+      tenant: tenantId,
     });
     return findOne;
   }

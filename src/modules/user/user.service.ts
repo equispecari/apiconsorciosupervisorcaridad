@@ -24,8 +24,8 @@ export class UserService {
     return this.userRepository.list();
   }
 
-  async updateRoles(id: string, permisions: UserPermistions[]) {
-    return await this.userRepository.update(id, { permisions });
+  async updateRoles(id: string, role: string) {
+    return await this.userRepository.update(id, { role });
   }
 
   async findByEmail(email: string) {
@@ -56,8 +56,6 @@ export class UserService {
     return await hash(password, salt);
   }
 
-  
-
   async updateInformation(user: UserAuth, update: updateUserDto) {
     return await this.userRepository.update(user.id, update);
   }
@@ -67,7 +65,6 @@ export class UserService {
 
     return { message: key, statusCode: 200 };
   }
-
 
   async upLoadImage(
     id: string,

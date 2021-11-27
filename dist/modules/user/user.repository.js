@@ -28,7 +28,7 @@ let UserRepository = class UserRepository extends base_repository_1.OperationRep
     }
     async getUsers(tenantId, skip, limit) {
         const findUsers = await this.model
-            .find({ permisions: { $elemMatch: { tenantId } } })
+            .find({ tenant: tenantId })
             .sort({ _id: -1 })
             .skip(skip || 0)
             .limit(limit || 5);
@@ -36,7 +36,7 @@ let UserRepository = class UserRepository extends base_repository_1.OperationRep
     }
     async getTotalUsers(tenantId) {
         const findOne = await this.model.countDocuments({
-            permisions: { $elemMatch: { tenantId } },
+            tenant: tenantId,
         });
         return findOne;
     }

@@ -28,7 +28,7 @@ let UserController = class UserController {
         return this.userService.findAll();
     }
     updateRoles(body) {
-        return this.userService.updateRoles(body.user, body.permisions);
+        return this.userService.updateRoles(body.id, body.role);
     }
     async updateInformation(user, update) {
         return await this.userService.updateInformation(user, update);
@@ -49,7 +49,7 @@ __decorate([
 ], UserController.prototype, "findAll", null);
 __decorate([
     (0, decorators_1.Auth)(constants_1.RoleEnum.ADMIN),
-    (0, common_1.Put)('admin/update/role'),
+    (0, common_1.Put)('changeRole'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

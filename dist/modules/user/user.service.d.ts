@@ -1,8 +1,7 @@
 /// <reference types="node" />
-/// <reference types="mongoose" />
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRepository } from './user.repository';
-import { IFile, UserAuth, UserPermistions } from '@shared/interfaces';
+import { IFile, UserAuth } from '@shared/interfaces';
 import { QueryUsersDto, updateUserDto } from './dto';
 import { UploadService } from '../upload/upload.service';
 export declare class UserService {
@@ -11,7 +10,7 @@ export declare class UserService {
     constructor(userRepository: UserRepository, uploadService: UploadService);
     create(createUserDto: CreateUserDto): Promise<import("./entities/user.entity").UserDocument>;
     findAll(): Promise<import("./entities/user.entity").UserDocument[]>;
-    updateRoles(id: string, permisions: UserPermistions[]): Promise<import("./entities/user.entity").UserDocument>;
+    updateRoles(id: string, role: string): Promise<import("./entities/user.entity").UserDocument>;
     findByEmail(email: string): Promise<import("./entities/user.entity").User & import("mongoose").Document<any, any, any> & {
         _id: any;
     }>;

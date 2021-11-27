@@ -28,8 +28,8 @@ let UserService = class UserService {
     findAll() {
         return this.userRepository.list();
     }
-    async updateRoles(id, permisions) {
-        return await this.userRepository.update(id, { permisions });
+    async updateRoles(id, role) {
+        return await this.userRepository.update(id, { role });
     }
     async findByEmail(email) {
         return await this.userRepository.findByEmail(email);

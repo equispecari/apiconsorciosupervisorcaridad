@@ -25,9 +25,9 @@ export class UserController {
   }
 
   @Auth(RoleEnum.ADMIN)
-  @Put('admin/update/role')
+  @Put('changeRole')
   updateRoles(@Body() body: any) {
-    return this.userService.updateRoles(body.user, body.permisions);
+    return this.userService.updateRoles(body.id, body.role);
   }
 
   @Put('')
