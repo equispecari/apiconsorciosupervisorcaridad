@@ -1,3 +1,4 @@
+/// <reference types="mongoose" />
 import { ObservacionesReqDto, DerivarReqDto, CreateReqInfoDto, QuerysReqDto, idReqDto, UpdateReqInfoDto, RechazadoReqDto } from './dto';
 import { AreaService } from '../area/area.service';
 import { TenantService } from '../tenant/tenant.service';

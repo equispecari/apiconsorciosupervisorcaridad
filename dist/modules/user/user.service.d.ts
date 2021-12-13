@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="mongoose" />
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRepository } from './user.repository';
 import { IFile, UserAuth } from '@shared/interfaces';
