@@ -1,3 +1,4 @@
+/// <reference types="mongoose" />
 import { UserAuth } from '@shared/interfaces';
 import { Request } from 'express';
 import { AuthService } from './auth.service';

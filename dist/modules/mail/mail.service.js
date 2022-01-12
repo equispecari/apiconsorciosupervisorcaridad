@@ -30,6 +30,7 @@ let MailService = class MailService {
             },
         });
         this.web_uri = _configService.get('FRONT_URL');
+        this.aws_base_uri = _configService.get('AWS_S3_URL');
     }
     async sendEmailToWithData(to, subject, body) {
         try {
@@ -46,7 +47,7 @@ let MailService = class MailService {
         }
     }
     resetPassword(token, email) {
-        const url = `${this._configService.get('FRONT_URL')}/reset-password/${token}`;
+        const url = `${this.web_uri}/reset-password/${token}`;
         const bodyMail = `¡Importante! Si no solicitó recuperar su contraseña ignore este mensaje.
     \nPor favor siga el siguiente enlace para restaurar su contraseña: \n${url}
     \nEste enlace caducará en 4 horas.`;
@@ -54,11 +55,12 @@ let MailService = class MailService {
     }
     registerDocument(email, num_serie, key) {
         const url = `${this.web_uri}/buscar/${num_serie}`;
+        const cargoUri = `${this.aws_base_uri}/${key}`;
         const html = `
     <h4>Estimad@</h4>
     <p>Su trámite se ha registrado con el siguiente código de registro ${num_serie}, ${url}</p>
     
-    <a href="${key}">
+    <a href="${cargoUri}">
       <img 
         title="CARGO"
         src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
@@ -75,14 +77,14 @@ let MailService = class MailService {
     </div>
     
     `;
-        this.sendEmailToWithData(email, '${this.name_bussines} - Registro y cargo', html);
+        this.sendEmailToWithData(email, `${this.name_bussines} - Registro y cargo`, html);
     }
     deribarDoc(to, data) {
         let html = `
         <h4>Estimad@ ${to.encargado}</h4>
         <p>Tiene este documento por revisar, ${data.nomenclatura}, ${data.asunto}. </p>
         
-        <a href="${this.web_uri}/${data.principal}" style="text-align: center;">
+        <a href="${this.aws_base_uri}/${data.principal}" style="text-align: center;">
           <img 
             title="PRINCIPAL"
             src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
@@ -93,7 +95,7 @@ let MailService = class MailService {
         if (data.anexo) {
             html =
                 html +
-                    `<a href="${data.anexo}" style="text-align: center;">
+                    `<a href="${this.aws_base_uri}/${data.anexo}" style="text-align: center;">
         <img 
           title="ANEXOS"
           src="https://summit-dew.s3.us-east-2.amazonaws.com/email/archive.png"

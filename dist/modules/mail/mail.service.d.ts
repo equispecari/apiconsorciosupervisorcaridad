@@ -3,6 +3,7 @@ export declare class MailService {
     private readonly _configService;
     private transporter;
     private web_uri;
+    private aws_base_uri;
     private name_bussines;
     constructor(_configService: ConfigService);
     sendEmailToWithData(to: string, subject: string, body: string): Promise<void>;

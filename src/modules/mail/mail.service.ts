@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 export class MailService {
   private transporter;
   private web_uri;
+  private aws_base_uri;
   private name_bussines = 'Consorcio Supervisor Caridad';
   constructor(private readonly _configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
@@ -21,6 +22,7 @@ export class MailService {
       },
     });
     this.web_uri = _configService.get('FRONT_URL');
+    this.aws_base_uri = _configService.get('AWS_S3_URL')
   }
 
   async sendEmailToWithData(to: string, subject: string, body: string) {
@@ -43,9 +45,7 @@ export class MailService {
   }
 
   resetPassword(token: string, email: string) {
-    const url = `${this._configService.get(
-      'FRONT_URL',
-    )}/reset-password/${token}`;
+    const url = `${this.web_uri}/reset-password/${token}`;
     const bodyMail = `¡Importante! Si no solicitó recuperar su contraseña ignore este mensaje.
     \nPor favor siga el siguiente enlace para restaurar su contraseña: \n${url}
     \nEste enlace caducará en 4 horas.`;
@@ -58,12 +58,13 @@ export class MailService {
 
   registerDocument(email: string, num_serie: string, key: string) {
     const url = `${this.web_uri}/buscar/${num_serie}`;
+    const cargoUri = `${this.aws_base_uri}/${key}`;
 
     const html = `
     <h4>Estimad@</h4>
     <p>Su trámite se ha registrado con el siguiente código de registro ${num_serie}, ${url}</p>
     
-    <a href="${key}">
+    <a href="${cargoUri}">
       <img 
         title="CARGO"
         src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
@@ -82,7 +83,7 @@ export class MailService {
     `;
     this.sendEmailToWithData(
       email,
-      '${this.name_bussines} - Registro y cargo',
+      `${this.name_bussines} - Registro y cargo`,
       html,
     );
   }
@@ -100,7 +101,7 @@ export class MailService {
         <h4>Estimad@ ${to.encargado}</h4>
         <p>Tiene este documento por revisar, ${data.nomenclatura}, ${data.asunto}. </p>
         
-        <a href="${this.web_uri}/${data.principal}" style="text-align: center;">
+        <a href="${this.aws_base_uri}/${data.principal}" style="text-align: center;">
           <img 
             title="PRINCIPAL"
             src="https://summit-dew.s3.us-east-2.amazonaws.com/email/pdf.png"
@@ -112,7 +113,7 @@ export class MailService {
     if (data.anexo) {
       html =
         html +
-        `<a href="${data.anexo}" style="text-align: center;">
+        `<a href="${this.aws_base_uri}/${data.anexo}" style="text-align: center;">
         <img 
           title="ANEXOS"
           src="https://summit-dew.s3.us-east-2.amazonaws.com/email/archive.png"
