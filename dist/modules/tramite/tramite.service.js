@@ -27,7 +27,8 @@ let TramiteService = class TramiteService {
     async getDocById(userAuth, id) {
         const findOne = await this._model
             .findOne({ _id: id, tenant: userAuth.tenantId })
-            .populate('owner');
+            .populate('owner')
+            .populate('area');
         if (!findOne) {
             throw new common_1.BadRequestException('No existe este documento');
         }
