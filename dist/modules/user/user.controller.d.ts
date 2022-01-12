@@ -1,4 +1,3 @@
-/// <reference types="mongoose" />
 import { UserService } from './user.service';
 import { IFile, UserAuth } from '@shared/interfaces';
 import { QueryUsersDto, updateUserDto } from './dto';
