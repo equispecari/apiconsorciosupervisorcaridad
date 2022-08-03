@@ -58,7 +58,7 @@ export class TramiteController {
     const num_serie =
       inc.name.toUpperCase().trim() +
       '-' +
-      repeat('0', 3 - inc.nro_doc.toString().length) +
+      repeat('0', 4 - inc.nro_doc.toString().length) +
       inc.nro_doc;
 
     const user = await this._userService.getUserById(userAuth.id);
@@ -250,7 +250,7 @@ export class TramiteController {
     @Query() querys: QuerysReqDto,
   ) {
     const { limit, query, skip } = querys;
-    let nQuery: { estado?: string; tenant: string } = {
+    const nQuery: { estado?: string; tenant: string } = {
       tenant: userAuth.tenantId,
     };
 
@@ -285,7 +285,7 @@ export class TramiteController {
     @Query() querys: QuerysReqDto,
   ) {
     const { limit, query, skip } = querys;
-    let nQuery: { estado?: string; owner: string; tenant: string } = {
+    const nQuery: { estado?: string; owner: string; tenant: string } = {
       owner: userAuth.id,
       tenant: userAuth.tenantId,
     };

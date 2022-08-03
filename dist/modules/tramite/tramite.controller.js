@@ -40,7 +40,7 @@ let TramiteController = class TramiteController {
         const inc = await this._incrementService.getNumDocSede(userAuth.tenantId);
         const num_serie = inc.name.toUpperCase().trim() +
             '-' +
-            (0, lodash_1.repeat)('0', 3 - inc.nro_doc.toString().length) +
+            (0, lodash_1.repeat)('0', 4 - inc.nro_doc.toString().length) +
             inc.nro_doc;
         const user = await this._userService.getUserById(userAuth.id);
         const dateReception = hours_of_attention_1.HoursOfAttention.getNewHour(inc.horario);
@@ -145,7 +145,7 @@ let TramiteController = class TramiteController {
     }
     async getDocuments(userAuth, querys) {
         const { limit, query, skip } = querys;
-        let nQuery = {
+        const nQuery = {
             tenant: userAuth.tenantId,
         };
         if (query === constants_1.StateEnum.DERIVAR ||
@@ -161,7 +161,7 @@ let TramiteController = class TramiteController {
     }
     async getMyDocuments(userAuth, querys) {
         const { limit, query, skip } = querys;
-        let nQuery = {
+        const nQuery = {
             owner: userAuth.id,
             tenant: userAuth.tenantId,
         };

@@ -16,7 +16,7 @@ const nodemailer = require('nodemailer');
 let MailService = class MailService {
     constructor(_configService) {
         this._configService = _configService;
-        this.name_bussines = 'Consorcio Supervisor Caridad';
+        this.name_bussines = 'SEG Ingenieria';
         this.transporter = nodemailer.createTransport({
             host: _configService.get('SMTP_HOST'),
             port: 465,
@@ -34,7 +34,7 @@ let MailService = class MailService {
     }
     async sendEmailToWithData(to, subject, body) {
         try {
-            let info = await this.transporter.sendMail({
+            const info = await this.transporter.sendMail({
                 from: `${this.name_bussines} - Mesa de partes virtual<${this._configService.get('SMTP_FROM_MAIL')}>`,
                 to: to,
                 subject: subject,

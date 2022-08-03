@@ -25,7 +25,7 @@ export class UploadService {
     this.s3Url = configService.get('AWS_S3_URL');
   }
 
-  checkImg(originalName: string): Boolean {
+  checkImg(originalName: string): boolean {
     return isImage(originalName);
   }
 
@@ -59,7 +59,7 @@ export class UploadService {
 
   startUpload(key: string, fileType: string): Promise<{ uploadId: string }> {
     try {
-      let params = {
+      const params = {
         Bucket: this.bucket,
         Key: key,
         ContentType: fileType,
@@ -87,7 +87,7 @@ export class UploadService {
     uploadId: string,
   ): Promise<{ presignedUrl: string }> {
     try {
-      let params = {
+      const params = {
         Bucket: this.bucket,
         Key: key,
         PartNumber: partNumber,
@@ -115,7 +115,7 @@ export class UploadService {
     uploadId: string,
   ): Promise<{ data }> {
     try {
-      let params = {
+      const params = {
         Bucket: this.bucket,
         Key: key,
         MultipartUpload: {
@@ -150,6 +150,7 @@ export class UploadService {
         .promise();
       return true;
     } catch (error) {
+      console.log(error);
       return false;
     }
   }
@@ -180,12 +181,12 @@ export class UploadService {
     };
     const hespace = 10;
 
-    const nombre_sede = 'CONSORCIO SUPERVISOR CARIDAD';
+    const nombre_sede = 'SEG Ingenieria';
     const text_y = 40;
 
     const logo1 = {
       x: 80,
-      y: 90,
+      y: 80,
     };
 
     const logo2 = {
@@ -198,10 +199,8 @@ export class UploadService {
     };
 
     //qr
-    let pdf_string = await qr.imageSync(
-      `${this.configService.get('FRONT_URL')}/${data.sede}/buscar/${
-        data.codigo
-      }`,
+    const pdf_string = await qr.imageSync(
+      `${this.configService.get('FRONT_URL')}/buscar/${data.codigo}`,
       {
         type: 'png',
       },
@@ -216,7 +215,7 @@ export class UploadService {
       [docConf.X - docConf.margin, docConf.Y - docConf.margin],
       [docConf.margin, docConf.Y - docConf.margin],
     );
-    doc.stroke();
+    doc.stroke('#B22222');
 
     // cuadro 2
     doc
@@ -230,7 +229,7 @@ export class UploadService {
         [docConf.margin * 5, docConf.Y - docConf.margin - docConf.margin / 2],
       )
       .lineWidth(2)
-      .stroke('#33AAFF');
+      .stroke('#B22222');
 
     //logo CSM
     doc.image(
@@ -312,7 +311,8 @@ export class UploadService {
 
     doc.end();
 
-    let key = this.getBaseKey(data.nomenclatura, data.sedeName) + '-cargo.pdf';
+    const key =
+      this.getBaseKey(data.nomenclatura, data.sedeName) + '-cargo.pdf';
 
     const isSent = await this.s3UploadPdf(doc, key);
 

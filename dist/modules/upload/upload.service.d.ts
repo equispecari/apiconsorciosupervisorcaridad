@@ -6,7 +6,7 @@ export declare class UploadService {
     private readonly bucket;
     private readonly s3Url;
     constructor(configService: ConfigService);
-    checkImg(originalName: string): Boolean;
+    checkImg(originalName: string): boolean;
     get aws_base_uri(): string;
     upLoadS3Object(buffer: Buffer, key: string): Promise<boolean>;
     deleteS3Object(key: string): void;

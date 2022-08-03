@@ -28,7 +28,8 @@ let TramiteService = class TramiteService {
         const findOne = await this._model
             .findOne({ _id: id, tenant: userAuth.tenantId })
             .populate('owner')
-            .populate('area');
+            .populate('area')
+            .populate('area.area');
         if (!findOne) {
             throw new common_1.BadRequestException('No existe este documento');
         }

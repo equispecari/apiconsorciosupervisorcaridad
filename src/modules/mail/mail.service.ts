@@ -7,7 +7,7 @@ export class MailService {
   private transporter;
   private web_uri;
   private aws_base_uri;
-  private name_bussines = 'Consorcio Supervisor Caridad';
+  private name_bussines = 'SEG Ingenieria';
   constructor(private readonly _configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: _configService.get<string>('SMTP_HOST'),
@@ -22,12 +22,12 @@ export class MailService {
       },
     });
     this.web_uri = _configService.get('FRONT_URL');
-    this.aws_base_uri = _configService.get('AWS_S3_URL')
+    this.aws_base_uri = _configService.get('AWS_S3_URL');
   }
 
   async sendEmailToWithData(to: string, subject: string, body: string) {
     try {
-      let info = await this.transporter.sendMail({
+      const info = await this.transporter.sendMail({
         from: `${
           this.name_bussines
         } - Mesa de partes virtual<${this._configService.get(

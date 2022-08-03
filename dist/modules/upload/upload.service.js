@@ -64,7 +64,7 @@ let UploadService = class UploadService {
     }
     startUpload(key, fileType) {
         try {
-            let params = {
+            const params = {
                 Bucket: this.bucket,
                 Key: key,
                 ContentType: fileType,
@@ -86,7 +86,7 @@ let UploadService = class UploadService {
     }
     getUploadUrl(key, partNumber, uploadId) {
         try {
-            let params = {
+            const params = {
                 Bucket: this.bucket,
                 Key: key,
                 PartNumber: partNumber,
@@ -108,7 +108,7 @@ let UploadService = class UploadService {
     }
     completeUpload(key, parts, uploadId) {
         try {
-            let params = {
+            const params = {
                 Bucket: this.bucket,
                 Key: key,
                 MultipartUpload: {
@@ -143,6 +143,7 @@ let UploadService = class UploadService {
             return true;
         }
         catch (error) {
+            console.log(error);
             return false;
         }
     }
@@ -156,11 +157,11 @@ let UploadService = class UploadService {
             margin: 30,
         };
         const hespace = 10;
-        const nombre_sede = 'CONSORCIO SUPERVISOR CARIDAD';
+        const nombre_sede = 'SEG Ingenieria';
         const text_y = 40;
         const logo1 = {
             x: 80,
-            y: 90,
+            y: 80,
         };
         const logo2 = {
             x: 30,
@@ -170,19 +171,19 @@ let UploadService = class UploadService {
             x: 140,
             y: 140,
         };
-        let pdf_string = await qr.imageSync(`${this.configService.get('FRONT_URL')}/${data.sede}/buscar/${data.codigo}`, {
+        const pdf_string = await qr.imageSync(`${this.configService.get('FRONT_URL')}/buscar/${data.codigo}`, {
             type: 'png',
         });
         const doc = new PDFDocument();
         doc.polygon([docConf.margin, docConf.margin], [docConf.X - docConf.margin, docConf.margin], [docConf.X - docConf.margin, docConf.Y - docConf.margin], [docConf.margin, docConf.Y - docConf.margin]);
-        doc.stroke();
+        doc.stroke('#B22222');
         doc
             .polygon([docConf.margin * 5, docConf.Y / 2 + docConf.margin], [docConf.X - docConf.margin * 5, docConf.Y / 2 + docConf.margin], [
             docConf.X - docConf.margin * 5,
             docConf.Y - docConf.margin - docConf.margin / 2,
         ], [docConf.margin * 5, docConf.Y - docConf.margin - docConf.margin / 2])
             .lineWidth(2)
-            .stroke('#33AAFF');
+            .stroke('#B22222');
         doc.image(path.join(__dirname, '../../../public/images/logo.png'), docConf.X / 2 - logo1.x / 2, docConf.margin + hespace, {
             width: logo1.x,
             height: logo1.y,
@@ -227,7 +228,7 @@ let UploadService = class UploadService {
             width: docConf.X - docConf.margin * 11,
         });
         doc.end();
-        let key = this.getBaseKey(data.nomenclatura, data.sedeName) + '-cargo.pdf';
+        const key = this.getBaseKey(data.nomenclatura, data.sedeName) + '-cargo.pdf';
         const isSent = await this.s3UploadPdf(doc, key);
         return isSent ? { key } : { key: null };
     }
